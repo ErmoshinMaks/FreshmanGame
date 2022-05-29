@@ -9,7 +9,9 @@ class Button_status(enum.Enum):
     level2='2'
     level3='3'
     level4='4'
+    rules="tut_1"
     Non="Ничего"
+
 
 class Button:
     def __init__(self, text, width, height, pos, elevation):
@@ -71,26 +73,26 @@ class Button:
 
 
 class Menu(pygame.sprite.Sprite):
-    #background=pygame.image.load(r"Sprites\menu.png").convert_alpha()
     running = True
     screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
+    background=pygame.image.load(r"Sprites\Menu_Sprites\background.png").convert_alpha()
+    background = pygame.transform.smoothscale(background, screen.get_size())
     W = screen.get_width()
     H = screen.get_height()
     FPS = 60
     color = (255, 250, 250)
     clock = pygame.time.Clock()
 
-    button1 = Button('Старт', 200, 40, (W//2-90, H//2-200), 5)
-    #button2 = Button('Уровни', 200, 40, (W//2-90, H//2+100), 5)
-    button3 = Button('Выход', 200, 40, (W//2-90, H//2+350), 5)
+    button1 = Button('Старт', 200, 40, (W//2-100, H//2-50), 5)
+    button3 = Button('Выход', 200, 40, (W//2-100, H//2+350), 5)
     buttons = [button1,button3]
     button_pressed=Button_status.Non
 
     def show_levels(self):
-        button_lvl1=Button('Уровень 1', 200, 40, (self.W//2-300, self.H//2-100), 5)
-        button_lvl2=Button('Уровень 2', 200, 40, (self.W//2-90, self.H//2-100), 5)
-        button_lvl3=Button('Уровень 3', 200, 40, (self.W//2+120, self.H//2-100), 5)
-        button_lvl4=Button('Уровень 4', 200, 40, (self.W//2+330, self.H//2-100), 5)
+        button_lvl1=Button('Уровень 1', 200, 40, (self.W//2-420, self.H//2+50), 5)
+        button_lvl2=Button('Уровень 2', 200, 40, (self.W//2-210, self.H//2+50), 5)
+        button_lvl3=Button('Уровень 3', 200, 40, (self.W//2, self.H//2+50), 5)
+        button_lvl4=Button('Уровень 4', 200, 40, (self.W//2+210, self.H//2+50), 5)
         self.buttons.append(button_lvl1)
         self.buttons.append(button_lvl2)
         self.buttons.append(button_lvl3)
@@ -127,6 +129,7 @@ class Menu(pygame.sprite.Sprite):
 
                 if self.button_pressed==Button_status.Start:
                     self.show_levels()
+
                 #уровни
                 if self.button_pressed==Button_status.level1:
                     self.button_pressed=Button_status.Non
@@ -140,7 +143,11 @@ class Menu(pygame.sprite.Sprite):
                     self.button_pressed = Button_status.Non
                     Engine.game_cycle(UI,Button_status.level3)
 
+                if self.button_pressed==Button_status.level4:
+                    self.button_pressed = Button_status.Non
+                    Engine.game_cycle(UI,Button_status.level4)
             self.screen.fill(self.color)
+            self.screen.blit(self.background,(0,0))
             self.buttons_draw()
             self.check_click()
             pygame.display.update()
@@ -148,3 +155,10 @@ class Menu(pygame.sprite.Sprite):
             self.clock.tick(self.FPS)
 
 
+    def draw_text(self,text, size, x, y):
+        font_name = pygame.font.match_font('koysan')
+        font = pygame.font.Font(font_name, size)
+        text_surface = font.render(text, True, (70, 130, 180))
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x, y)
+        self.screen.blit(text_surface, text_rect)
