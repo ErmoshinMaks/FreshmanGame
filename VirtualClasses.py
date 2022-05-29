@@ -4,7 +4,7 @@ pygame.init()
 class Abstract_object(pygame.sprite.Sprite):
     def __init__(self,point,name="unknown",onmap="Yes"):
         pygame.sprite.Sprite.__init__(self)
-        self.Point = point
+        self.point = point
         #self.rect = self.image.get_rect(centerx=self.Point.x,centery=self.Point.y)
         self.name=name
         self.onmap=onmap
@@ -24,16 +24,16 @@ class Block(Material):
         self.image=image
 
     def left(self):
-        return self.Point.x
+        return self.point.x
 
     def right(self):
-        return self.Point.x+self.image.get_rect().width
+        return self.point.x+self.image.get_rect().width
 
     def up(self):
-        return self.Point.y
+        return self.point.y
 
     def down(self):
-        return self.Point.y+self.image.get_rect().height
+        return self.point.y+self.image.get_rect().height
 
 
 class Creature(Material):

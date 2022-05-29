@@ -3,12 +3,12 @@ class UI:
     def paint_Map(self,screen,Map):
         for obj in Map.Objects:
             if type(obj) in [Mobs, Boss_Kozlov]:
-                screen.blit(obj.animation.image, (obj.Point + Map.Freshman.Phys.d).tuple())
+                screen.blit(obj.animation.image, (obj.point + Map.Freshman.Phys.d).tuple())
             elif type(obj)==Message:
                 obj.draw_text(screen,Map)
             else:
-                screen.blit(obj.image, (obj.Point + Map.Freshman.Phys.d).tuple())
-        screen.blit(Map.Freshman.animation.image, (Map.Freshman.Point + Map.Freshman.Phys.d).tuple())
+                screen.blit(obj.image, (obj.point + Map.Freshman.Phys.d).tuple())
+        screen.blit(Map.Freshman.animation.image, (Map.Freshman.point + Map.Freshman.Phys.d).tuple())
 
         pygame.draw.rect(pygame.display.set_mode([0, 0], pygame.FULLSCREEN), (0, 0, 0),(100, 100, Map.Freshman.maxhp, 20))
         pygame.draw.rect(pygame.display.set_mode([0, 0], pygame.FULLSCREEN), (0, 192, 0),(100, 100, Map.Freshman.hp, 20))

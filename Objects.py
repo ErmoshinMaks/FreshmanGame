@@ -27,6 +27,7 @@ class Player(Human):
                 self.Developer=True
             else:
                 self.Developer = False
+
         elif keys[pygame.K_SPACE] and keys[pygame.K_RIGHT]:
                 self.animation.moveStatus = Orientation.Bullet_Right_move
                 self.animation.last_status = Orientation.Right
@@ -130,7 +131,7 @@ class Player(Human):
         W = screen.get_width()
         H = screen.get_height()
         self.Phys.d = Point(W // 2, H // 2) - self.Phys.crd
-        self.Point = self.Phys.crd
+        self.point = self.Phys.crd
 
     def get_damage(self, dmg):
         damage_sound = pygame.mixer.Sound(r"SFX\damage_player.mp3")
@@ -144,17 +145,17 @@ class Player(Human):
             if(self.shoot_progress%11==0):#11 заменить на enum как?
 
                 if self.animation.moveStatus == Orientation.Bullet_Right_move:
-                    point=self.Point+Point(self.animation.image.get_rect().width,self.animation.image.get_rect().height//2+50)
+                    point=self.point+Point(self.animation.image.get_rect().width,self.animation.image.get_rect().height//2+50)
 
                 elif self.animation.moveStatus == Orientation.Bullet_Left_move:
-                    point=self.Point+Point(-self.animation.image.get_rect().width+100,self.animation.image.get_rect().height//2+50)
+                    point=self.point+Point(-self.animation.image.get_rect().width+100,self.animation.image.get_rect().height//2+50)
 
                 elif self.animation.moveStatus==Orientation.Bullet_stand:
                     if self.animation.last_status in [Orientation.Right,Orientation.UpRight]:
-                        point = self.Point + Point(self.animation.image.get_rect().width,self.animation.image.get_rect().height // 2 + 50)
+                        point = self.point + Point(self.animation.image.get_rect().width,self.animation.image.get_rect().height // 2 + 50)
 
                     elif self.animation.last_status in [Orientation.Left,Orientation.UpLeft]:
-                        point = self.Point + Point(-self.animation.image.get_rect().width + 100,self.animation.image.get_rect().height // 2 + 50)
+                        point = self.point + Point(-self.animation.image.get_rect().width + 100,self.animation.image.get_rect().height // 2 + 50)
 
                 Bullet_o=Bullet(point, "Пуля",self.animation.last_status)
                 bullet_sound=pygame.mixer.Sound(r"SFX\bullet.mp3")
@@ -206,20 +207,25 @@ class Mobs(Human):#создать класс анимации
     def move(self,Map):
         self.animation.show(self)
         if self.animation.moveStatus == Orientation.Left:
-            self.Point.x += 2
-            if self.Point.x > self.Point0.x + 250:
+            self.point.x += 2
+            if self.point.x > self.Point0.x + 250:
                 self.animation.moveStatus = Orientation.Right
         elif self.animation.moveStatus == Orientation.Right:
-            self.Point.x -= 2
-            if self.Point.x < self.Point0.x - 250:
+            self.point.x -= 2
+            if self.point.x < self.Point0.x - 250:
                 self.animation.moveStatus = Orientation.Left
         self.damage(Map.Freshman)
         self.Phys.interactions(Map.Objects)
 
     def damage(self,Freshman):
-        if (Freshman.Phys.crd.x <= self.Point.x+self.animation.image.get_width() <= Freshman.Phys.crd.x + Freshman.animation.image.get_width() and Freshman.Phys.crd.y <= self.Point.y++self.animation.image.get_height() <= Freshman.Phys.crd.y + Freshman.animation.image.get_height()):
+        if (Freshman.Phys.crd.x <= self.point.x+self.animation.image.get_width() <= Freshman.Phys.crd.x + Freshman.animation.image.get_width() and Freshman.Phys.crd.y <= self.point.y++self.animation.image.get_height() <= Freshman.Phys.crd.y + Freshman.animation.image.get_height()):
             Freshman.get_damage(1)
 
+    def get_damage(self, dmg):
+        if self.animation.animation_progress % 23 == 0 and self.hp>0:
+            damage_sound = pygame.mixer.Sound(r"SFX\damage_mob.mp3")
+            damage_sound.play()
+        self.hp = max(self.hp - dmg, 0)
 
     def death(self):
         self.animation.moveStatus=Orientation.Death
@@ -246,7 +252,7 @@ class Mobs(Human):#создать класс анимации
 class Bullet(Damage_Object):
     def __init__(self,point,Name,moveStatus,damage=1,onmap="Yes"):
         super().__init__(damage)
-        self.Point=point
+        self.point=point
         self.Name=Name
         self.image=pygame.image.load(r"Sprites\Bullet_Sprites\red_bullet.png").convert_alpha()
         self.moveStatus=moveStatus
@@ -256,19 +262,19 @@ class Bullet(Damage_Object):
 
     def move(self):
         if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
-            self.Point.x+=15
+            self.point.x+=15
         elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
-            self.Point.x-=15
+            self.point.x-=15
 
 
     def check_collision(self, Object):#переписать это говно
-        return (Object.Point.x<=self.Point.x<=Object.Point.x+Object.animation.image.get_width() and \
-        Object.Point.y<=self.Point.y<=Object.Point.y+Object.animation.image.get_height())
+        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
+        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
 
 class Poop(Damage_Object):
     def __init__(self,point,Name,moveStatus,damage=1,onmap="Yes"):
         super().__init__(damage)
-        self.Point=point
+        self.point=point
         self.Name=Name
         self.image=pygame.image.load(r"Sprites\Bullet_Sprites\blue_bullet.png").convert_alpha()
         self.moveStatus=moveStatus
@@ -278,14 +284,14 @@ class Poop(Damage_Object):
 
     def move(self):
         if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
-            self.Point.x-=7
+            self.point.x-=7
         elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
-            self.Point.x+=7
+            self.point.x+=7
 
 
     def check_collision(self, Object):#переписать это говно
-        return (Object.Point.x<=self.Point.x<=Object.Point.x+Object.animation.image.get_width() and \
-        Object.Point.y<=self.Point.y<=Object.Point.y+Object.animation.image.get_height())
+        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
+        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
 
 class Boss_Kozlov(Human):
     def __init__(self,point,Name,hp):
@@ -298,34 +304,38 @@ class Boss_Kozlov(Human):
     def move(self,Map):
         self.animation.show(self)
         if self.animation.moveStatus == Orientation.Left:
-            self.Point.x += 2
+            self.point.x += 2
             self.shoot_progress+=1
-            if Map.Freshman.Point.x+1000 >= self.Point.x:
-                self.shoot(Map)
-            if self.Point.x > self.Point0.x + 400:
+            self.shoot(Map)
+            if self.point.x > self.Point0.x + 400:
                 self.animation.moveStatus = Orientation.Right
         elif self.animation.moveStatus == Orientation.Right:
-            self.Point.x -= 2
+            self.point.x -= 2
             self.shoot_progress += 1
-            if Map.Freshman.Point.x+1000 >= self.Point.x:
-                self.shoot(Map)
-            if self.Point.x < self.Point0.x:
+            self.shoot(Map)
+            if self.point.x < self.Point0.x:
                 self.animation.moveStatus = Orientation.Left
         self.damage(Map.Freshman)
         self.Phys.interactions(Map.Objects)
 
     def damage(self,Freshman):
-        if (Freshman.Phys.crd.x <= self.Point.x+self.animation.image.get_width() <= Freshman.Phys.crd.x + Freshman.animation.image.get_width() and Freshman.Phys.crd.y <= self.Point.y++self.animation.image.get_height() <= Freshman.Phys.crd.y + Freshman.animation.image.get_height()):
+        if (Freshman.Phys.crd.x <= self.point.x+self.animation.image.get_width() <= Freshman.Phys.crd.x + Freshman.animation.image.get_width() and Freshman.Phys.crd.y <= self.point.y++self.animation.image.get_height() <= Freshman.Phys.crd.y + Freshman.animation.image.get_height()):
             Freshman.hp=max(Freshman.hp-20, 0)
+
+    def get_damage(self, dmg):
+        if self.animation.animation_progress % 56 == 0 and self.hp>0:
+            damage_sound = pygame.mixer.Sound(r"SFX\damage_boss_kozlov.mp3")
+            damage_sound.play()
+        self.hp = max(self.hp - dmg, 0)
 
     def shoot(self,Map):
             if(self.shoot_progress%83==0):#11 заменить на enum как?
 
                 if self.animation.moveStatus == Orientation.Left:
-                    point=self.Point+Point(self.animation.image.get_rect().width+350,self.animation.image.get_rect().height//2+20)
+                    point=self.point+Point(self.animation.image.get_rect().width+350,self.animation.image.get_rect().height//2+20)
 
                 elif self.animation.moveStatus == Orientation.Right:
-                    point=self.Point+Point(-self.animation.image.get_rect().width,self.animation.image.get_rect().height//2+20)
+                    point=self.point+Point(-self.animation.image.get_rect().width,self.animation.image.get_rect().height//2+20)
 
                 Poop_o=Poop(point, "Какашка",self.animation.last_status)
                 bullet_sound=pygame.mixer.Sound(r"SFX\bullet.mp3")
@@ -452,7 +462,7 @@ class Animation_death:
 
     def show(self, Object, main_anim):
         main_anim.image = self.sprites[0]
-        if main_anim.animation_progress % 157 == 0:
+        if main_anim.animation_progress % 83 == 0:
             Object.onmap="No"
 
 class Animation_shoot:

@@ -2,13 +2,17 @@ from Objects import *
 
 class Map:
     Objects = []
+    All_Objects=[]
     Freshman=0
     gup=False
     running=True
 
-    def add(self, Object):
-        self.Objects.append(Object)
+    screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
+    W = screen.get_width()
+    H = screen.get_height()
 
+    def add(self, Object):
+        self.All_Objects.append(Object)
 
 
     def all_move(self,keys):
@@ -23,7 +27,7 @@ class Map:
 
         self.check_hp()
         self.all_move(keys)
-        self.delete()
+        #self.delete()
 
     def move_mobs(self):
         for obj in self.Objects:
@@ -33,7 +37,7 @@ class Map:
     def move_bullet(self):
         for obj in self.Objects:
             if type(obj) in [Bullet,Poop]:
-                if obj.Point.x>obj.Point0.x+400 or obj.Point.x<obj.Point0.x-400:
+                if obj.point.x>obj.Point0.x+400 or obj.point.x<obj.Point0.x-400:
                     obj.onmap="No"
                 else:
                     self.bullet_damage(obj)
@@ -42,9 +46,7 @@ class Map:
     def bullet_damage(self,bullet):
             for enemy in self.Objects:
                 if type(enemy) in [Mobs,Boss_Kozlov] and bullet.check_collision(enemy):
-                    damage_sound = pygame.mixer.Sound(r"SFX\damage_mob.mp3")
-                    damage_sound.play()
-                    enemy.hp-=1
+                    enemy.get_damage(1)
             if type(bullet)==Poop and bullet.check_collision(self.Freshman):
                 self.Freshman.get_damage(5)
 
@@ -66,12 +68,22 @@ class Map:
             self.Freshman.hp=self.Freshman.maxhp
 
 
-    def delete(self):
-        for obj in self.Objects:
-            if obj.onmap=="No":
-                self.Objects.remove(obj)
-                if type(obj) in [Boss_Kozlov]:
+    def spawn_objects(self):
+        for object in self.All_Objects:
+            if self.Freshman.point.x-self.W<object.point.x<=self.Freshman.point.x or self.Freshman.point.x<=object.point.x<self.Freshman.point.x+self.W:
+                if not(object in self.Objects):
+                    self.Objects.append(object)
+            else:
+                if object in self.Objects:
+                    self.Objects.remove(object)
+
+            if object.onmap=="No":
+                if object in self.Objects:
+                    self.Objects.remove(object)
+                self.All_Objects.remove(object)
+                if type(object) in [Boss_Kozlov]:
                     self.running = False
+
 
     def create_map(self,level):
         lines=[]
@@ -114,3 +126,7 @@ class Map:
     def invert(self):
         self.Freshman.Phys.w.y=-self.Freshman.Phys.w.y
         self.gup = not self.gup
+
+
+def cmp_Point(a,b):
+    return a.point.x>b.point.x
