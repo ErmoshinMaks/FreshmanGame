@@ -10,7 +10,6 @@ class Platform(Block):
     def __init__(self,image,point,Name):
         super().__init__(image,point,Name)
 
-
 class Player(Human):
     def __init__(self,point,Name="Player",shoot_progress=0,hp=100, maxhp=100, xp=0):
         super().__init__(point,Name,shoot_progress,hp, maxhp, xp)
@@ -22,24 +21,30 @@ class Player(Human):
         self.Developer=False
 
     def move(self,keys,Map):
+        camera_y=75
         if keys[pygame.K_F1] and keys[pygame.K_F2]:
             if self.Developer==False:
                 self.Developer=True
             else:
                 self.Developer = False
-
         elif keys[pygame.K_SPACE] and keys[pygame.K_RIGHT]:
                 self.animation.moveStatus = Orientation.Bullet_Right_move
                 self.animation.last_status = Orientation.Right
                 self.shoot_progress += 1
-                self.Phys.v.x = Move_Const.vx.value
+                if self.animation.gan_status==Guns.machine_gun:
+                    self.Phys.v.x = Move_Const.vx_machine_gun.value
+                elif self.animation.gan_status==Guns.shotgun:
+                    self.Phys.v.x = Move_Const.vx_shotgun.value
                 self.shoot(Map)
 
         elif keys[pygame.K_SPACE] and keys[pygame.K_LEFT]:
                 self.animation.moveStatus = Orientation.Bullet_Left_move
                 self.animation.last_status = Orientation.Left
                 self.shoot_progress += 1
-                self.Phys.v.x = -Move_Const.vx.value
+                if self.animation.gan_status == Guns.machine_gun:
+                    self.Phys.v.x = -Move_Const.vx_machine_gun.value
+                elif self.animation.gan_status == Guns.shotgun:
+                    self.Phys.v.x = -Move_Const.vx_shotgun.value
                 self.shoot(Map)
 
         elif keys[pygame.K_SPACE] and keys[pygame.K_UP]:
@@ -70,12 +75,14 @@ class Player(Human):
                 self.Phys.v.y = -Move_Const.vy.value
 
         elif keys[pygame.K_DOWN] and keys[pygame.K_RIGHT] and Map.gup:
+            camera_y=125
             self.Phys.v.x = Move_Const.vx.value
             self.animation.moveStatus=Orientation.UpRight
             if self.Phys.crd.y == self.Phys.y0:
                 self.Phys.v.y = Move_Const.vy.value
 
         elif keys[pygame.K_DOWN] and keys[pygame.K_LEFT] and Map.gup:
+            camera_y = 125
             self.animation.moveStatus = Orientation.UpLeft
             self.Phys.v.x = -Move_Const.vx.value
             if self.Phys.crd.y == self.Phys.y0:
@@ -100,11 +107,19 @@ class Player(Human):
 
 
         elif keys[pygame.K_DOWN]:
+            camera_y = 125
             if not Map.gup:
                 self.animation.moveStatus = Orientation.Down
             else:
                 if self.Phys.crd.y == self.Phys.y0:
                     self.Phys.v.y = -Move_Const.vy.value
+
+        elif keys[pygame.K_r]:
+            if self.animation.gan_status==Guns.machine_gun:
+                self.animation.gan_status=Guns.shotgun
+
+            elif self.animation.gan_status == Guns.shotgun:
+                self.animation.gan_status = Guns.machine_gun
 
         elif keys[pygame.K_h] and self.Developer:
             self.hp=min(self.hp+4, self.maxhp)
@@ -130,7 +145,7 @@ class Player(Human):
         screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
         W = screen.get_width()
         H = screen.get_height()
-        self.Phys.d = Point(W // 2, H // 2) - self.Phys.crd
+        self.Phys.d = Point(W // 2, H // 2-camera_y) - self.Phys.crd
         self.point = self.Phys.crd
 
     def get_damage(self, dmg):
@@ -142,7 +157,11 @@ class Player(Human):
         self.animation.moveStatus=Orientation.Death
 
     def shoot(self,Map):
-            if(self.shoot_progress%11==0):#11 заменить на enum как?
+            if self.animation.gan_status==Guns.machine_gun:
+                delay=Animation_const.machine_gun.value
+            elif self.animation.gan_status==Guns.shotgun:
+                delay=Animation_const.shotgun.value
+            if(self.shoot_progress%delay==0):
 
                 if self.animation.moveStatus == Orientation.Bullet_Right_move:
                     point=self.point+Point(self.animation.image.get_rect().width,self.animation.image.get_rect().height//2+50)
@@ -156,9 +175,11 @@ class Player(Human):
 
                     elif self.animation.last_status in [Orientation.Left,Orientation.UpLeft]:
                         point = self.point + Point(-self.animation.image.get_rect().width + 100,self.animation.image.get_rect().height // 2 + 50)
-
-                Bullet_o=Bullet(point, "Пуля",self.animation.last_status)
-                bullet_sound=pygame.mixer.Sound(r"SFX\bullet.mp3")
+                Bullet_o=Bullet(point, "Пуля",self.animation.last_status,self.animation.gan_status)
+                if self.animation.gan_status==Guns.shotgun:
+                    bullet_sound=pygame.mixer.Sound(r"SFX\bullet.mp3")
+                elif self.animation.gan_status==Guns.machine_gun:
+                    bullet_sound=pygame.mixer.Sound(r"SFX\machine_gun.mp3")
                 bullet_sound.play()
                 Map.add(Bullet_o)
 
@@ -182,12 +203,27 @@ class Player(Human):
                       pygame.image.load(r"Sprites\Freshman_Sprites\14.png").convert_alpha(),
                       pygame.image.load(r"Sprites\Freshman_Sprites\15.png").convert_alpha(),
                       pygame.image.load(r"Sprites\Freshman_Sprites\16.png").convert_alpha()],
+
                       [pygame.image.load(r"Sprites\Freshman_Sprites\17.png").convert_alpha(),
                       pygame.image.load(r"Sprites\Freshman_Sprites\18.png").convert_alpha(),
                       pygame.image.load(r"Sprites\Freshman_Sprites\19.png").convert_alpha(),
                       pygame.image.load(r"Sprites\Freshman_Sprites\20.png").convert_alpha()],
+
                       [pygame.image.load(r"Sprites\Freshman_Sprites\21.png").convert_alpha(),
-                      pygame.image.load(r"Sprites\Freshman_Sprites\22.png").convert_alpha()]]
+                      pygame.image.load(r"Sprites\Freshman_Sprites\22.png").convert_alpha()],
+
+                      [pygame.image.load(r"Sprites\Freshman_Sprites\23.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\24.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\25.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\26.png").convert_alpha()],
+
+                      [pygame.image.load(r"Sprites\Freshman_Sprites\27.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\28.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\29.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\30.png").convert_alpha()],
+
+                      [pygame.image.load(r"Sprites\Freshman_Sprites\31.png").convert_alpha(),
+                       pygame.image.load(r"Sprites\Freshman_Sprites\32.png").convert_alpha()]]
 
         deathGroup = [pygame.image.load(r"Sprites\Freshman_Sprites\Death.png").convert_alpha()]
 
@@ -247,51 +283,6 @@ class Mobs(Human):#создать класс анимации
         Group = [pygame.image.load(r"Sprites\Mobs_Sprites\1.png").convert_alpha(), [leftGroup, rightGroup], deathGroup,
                  shootGroup]
         return Group
-
-
-class Bullet(Damage_Object):
-    def __init__(self,point,Name,moveStatus,damage=1,onmap="Yes"):
-        super().__init__(damage)
-        self.point=point
-        self.Name=Name
-        self.image=pygame.image.load(r"Sprites\Bullet_Sprites\red_bullet.png").convert_alpha()
-        self.moveStatus=moveStatus
-        self.Point0=point.copy()
-        self.onmap=onmap
-        self.shoot_progress=0
-
-    def move(self):
-        if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
-            self.point.x+=15
-        elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
-            self.point.x-=15
-
-
-    def check_collision(self, Object):#переписать это говно
-        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
-        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
-
-class Poop(Damage_Object):
-    def __init__(self,point,Name,moveStatus,damage=1,onmap="Yes"):
-        super().__init__(damage)
-        self.point=point
-        self.Name=Name
-        self.image=pygame.image.load(r"Sprites\Bullet_Sprites\blue_bullet.png").convert_alpha()
-        self.moveStatus=moveStatus
-        self.Point0=point.copy()
-        self.onmap=onmap
-        self.shoot_progress=0
-
-    def move(self):
-        if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
-            self.point.x-=7
-        elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
-            self.point.x+=7
-
-
-    def check_collision(self, Object):#переписать это говно
-        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
-        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
 
 class Boss_Kozlov(Human):
     def __init__(self,point,Name,hp):
@@ -391,6 +382,65 @@ class Boss_Kozlov(Human):
                  shootGroup]
         return Group
 
+
+class Bullet(Damage_Object):
+    def __init__(self,point,Name,moveStatus,gun,damage=1,onmap="Yes"):
+        super().__init__(damage)
+        self.point=point
+        self.Name=Name
+        self.image=pygame.image.load(r"Sprites\Bullet_Sprites\red_bullet.png").convert_alpha()
+        self.moveStatus=moveStatus
+        self.Point0=point.copy()
+        self.onmap=onmap
+        self.shoot_progress=0
+        self.gun=gun
+        if gun==Guns.machine_gun: self.maxlen=600
+        elif gun==Guns.shotgun: self.maxlen=400
+
+    def move(self):
+        if self.gun==Guns.machine_gun:
+            if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
+                self.point.x+=20
+            elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
+                self.point.x-=20
+        elif self.gun==Guns.shotgun:
+            if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
+                self.point.x+=15
+            elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
+                self.point.x-=15
+
+
+
+    def check_collision(self, Object):#переписать это говно
+        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
+        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
+
+class Poop(Damage_Object):
+    def __init__(self,point,Name,moveStatus,damage=1,onmap="Yes"):
+        super().__init__(damage)
+        self.point=point
+        self.Name=Name
+        self.image=pygame.image.load(r"Sprites\Bullet_Sprites\blue_bullet.png").convert_alpha()
+        self.moveStatus=moveStatus
+        self.Point0=point.copy()
+        self.onmap=onmap
+        self.shoot_progress=0
+        gun=Guns.shotgun
+        if gun==Guns.machine_gun: self.maxlen=600
+        elif gun==Guns.shotgun: self.maxlen=400
+
+    def move(self):
+        if self.moveStatus in [Orientation.Right,Orientation.UpRight]:
+            self.point.x-=7
+        elif self.moveStatus in [Orientation.Left,Orientation.UpLeft]:
+            self.point.x+=7
+
+
+    def check_collision(self, Object):#переписать это говно
+        return (Object.point.x<=self.point.x<=Object.point.x+Object.animation.image.get_width() and \
+        Object.point.y<=self.point.y<=Object.point.y+Object.animation.image.get_height())
+
+
 class DamagePlatform(Damage_Object,Platform):
     def __init__(self,image,point,Name,damage):
         Block.__init__(self,image,point,Name)
@@ -416,6 +466,7 @@ class Animation:
         self.animation_death = Animation_death(sprites[2], type_obj)
         self.animation_shoot = Animation_shoot(sprites[3], type_obj)
         self.last_status = Orientation.Non
+        self.gan_status = Guns.machine_gun
 
 
     def show(self,Object):
@@ -471,17 +522,31 @@ class Animation_shoot:
         self.type_obj = type_obj
 
     def show(self, Object, main_anim):
-        if main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Right, Orientation.UpRight]:
-            main_anim.image = self.sprites[2][1]
+        if main_anim.gan_status==Guns.shotgun:
+            if main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Right, Orientation.UpRight]:
+                main_anim.image = self.sprites[2][1]
 
-        elif main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Left, Orientation.UpLeft]:
-            main_anim.image = self.sprites[2][0]
+            elif main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Left, Orientation.UpLeft]:
+                main_anim.image = self.sprites[2][0]
 
-        elif main_anim.moveStatus == Orientation.Bullet_Right_move:
-            main_anim.image = self.sprites[1][int(main_anim.animation_progress // 8) % len(self.sprites[1])]
+            elif main_anim.moveStatus == Orientation.Bullet_Right_move:
+                main_anim.image = self.sprites[1][int(main_anim.animation_progress // 8) % len(self.sprites[1])]
 
-        elif main_anim.moveStatus == Orientation.Bullet_Left_move:
-            main_anim.image = self.sprites[0][int(main_anim.animation_progress // 8) % len(self.sprites[0])]
+            elif main_anim.moveStatus == Orientation.Bullet_Left_move:
+                main_anim.image = self.sprites[0][int(main_anim.animation_progress // 8) % len(self.sprites[0])]
+
+        elif main_anim.gan_status==Guns.machine_gun:
+            if main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Right,Orientation.UpRight]:
+                main_anim.image = self.sprites[5][1]
+
+            elif main_anim.moveStatus == Orientation.Bullet_stand and main_anim.last_status in [Orientation.Left,Orientation.UpLeft]:
+                main_anim.image = self.sprites[5][0]
+
+            elif main_anim.moveStatus == Orientation.Bullet_Right_move:
+                main_anim.image = self.sprites[4][int(main_anim.animation_progress // 8) % len(self.sprites[1])]
+
+            elif main_anim.moveStatus == Orientation.Bullet_Left_move:
+                main_anim.image = self.sprites[3][int(main_anim.animation_progress // 8) % len(self.sprites[0])]
 
 
 

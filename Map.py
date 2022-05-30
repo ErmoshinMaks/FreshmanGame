@@ -37,7 +37,7 @@ class Map:
     def move_bullet(self):
         for obj in self.Objects:
             if type(obj) in [Bullet,Poop]:
-                if obj.point.x>obj.Point0.x+400 or obj.point.x<obj.Point0.x-400:
+                if obj.point.x>obj.Point0.x+obj.maxlen or obj.point.x<obj.Point0.x-obj.maxlen:
                     obj.onmap="No"
                 else:
                     self.bullet_damage(obj)

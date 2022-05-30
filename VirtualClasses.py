@@ -5,7 +5,6 @@ class Abstract_object(pygame.sprite.Sprite):
     def __init__(self,point,name="unknown",onmap="Yes"):
         pygame.sprite.Sprite.__init__(self)
         self.point = point
-        #self.rect = self.image.get_rect(centerx=self.Point.x,centery=self.Point.y)
         self.name=name
         self.onmap=onmap
 
